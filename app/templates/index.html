@@ -1,0 +1,106 @@
+<!DOCTYPE html> 
+<html lang="es"> 
+<head> 
+    <meta charset="UTF-8"> 
+    <title>Login / Registro</title> 
+    <style> 
+        body { font-family: Arial, sans-serif; padding: 2rem; } 
+        form { max-width: 400px; margin-bottom: 2rem; } 
+        input, button { display: block; width: 100%; margin: 0.5rem 0; padding: 0.5rem; } 
+        .switch-link { cursor: pointer; color: blue; text-decoration: underline; } 
+        #response { margin-top: 1rem; color: green; } 
+        #error { color: red; } 
+    </style> 
+</head> 
+<body> 
+ 
+<h2 id="form-title">Iniciar sesión</h2> 
+ 
+<div id="response"></div> 
+<div id="error"></div> 
+ 
+<!-- Formulario de Login --> 
+<form id="login-form"> 
+    <input type="text" name="username" placeholder="Usuario" required> 
+    <input type="password" name="password" placeholder="Contraseña" required> 
+    <button type="submit">Ingresar</button> 
+    <p>¿No tienes cuenta? <span class="switch-link" onclick="toggleForms()">Regístrate 
+aquí</span></p> 
+</form> 
+ 
+<!-- Formulario de Registro --> 
+<form id="register-form" style="display: none;"> 
+    <input type="text" name="username" placeholder="Usuario" required> 
+    <input type="password" name="password" placeholder="Contraseña" required> 
+    <button type="submit">Registrarse</button> 
+    <p>¿Ya tienes cuenta? <span class="switch-link" onclick="toggleForms()">Inicia sesión 
+aquí</span></p> 
+</form> 
+ 
+<script> 
+    function toggleForms() { 
+        const loginForm = document.getElementById('login-form'); 
+        const registerForm = document.getElementById('register-form'); 
+        const title = document.getElementById('form-title'); 
+        const response = document.getElementById('response'); 
+        const error = document.getElementById('error'); 
+        response.innerText = ''; 
+        error.innerText = ''; 
+ 
+        const isLoginVisible = loginForm.style.display !== "none"; 
+        loginForm.style.display = isLoginVisible ? "none" : "block"; 
+        registerForm.style.display = isLoginVisible ? "block" : "none"; 
+        title.textContent = isLoginVisible ? "Registro" : "Iniciar sesión"; 
+    } 
+ 
+    // Login 
+    document.getElementById('login-form').addEventListener('submit', async function(e) { 
+        e.preventDefault(); 
+        const form = e.target; 
+        const data = { 
+            username: form.username.value, 
+            password: form.password.value 
+        }; 
+ 
+        const res = await fetch('/api/auth/login', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(data) 
+        }); 
+
+        if (res.ok){
+            const response = await res.json();
+            const token = response.access_token;
+
+            localStorage.setItem('token', token);
+
+            window.location.href = '/brailletest';
+        } else{
+            const responseText = await res.text();
+            document.getElementById('error').innerText = res.ok ? '' : responseText; 
+        }
+    }); 
+ 
+    // Registro 
+    document.getElementById('register-form').addEventListener('submit', async function(e) { 
+        e.preventDefault(); 
+        const form = e.target; 
+        const data = { 
+            username: form.username.value, 
+            password: form.password.value 
+        }; 
+ 
+        const res = await fetch('/api/auth/register', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(data) 
+        }); 
+ 
+        const responseText = await res.text(); 
+        document.getElementById('response').innerText = res.ok ? responseText : ''; 
+        document.getElementById('error').innerText = res.ok ? '' : responseText; 
+    }); 
+</script> 
+ 
+</body> 
+</html>
