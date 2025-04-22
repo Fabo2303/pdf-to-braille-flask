@@ -7,7 +7,7 @@ import os
 import re
 
 # Especifica la ruta al ejecutable de Tesseract (solo en Windows)
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 def convert_pdf_to_images(pdf_path, zoom=2):
     """
