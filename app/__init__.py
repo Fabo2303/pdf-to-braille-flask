@@ -18,9 +18,11 @@ def create_app():
     from .routes.pdf_routes import pdf_bp
     from .routes.auth_routes import auth_bp
     from .routes.file_routes import braille_bp
+    from .routes.main_routes import main_bp
 
     app.register_blueprint(pdf_bp, url_prefix='/api/pdf')
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(braille_bp, url_prefix='/api/braille')
+    app.register_blueprint(main_bp)
 
     return app
