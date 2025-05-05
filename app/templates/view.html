@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Subir PDF - BraillePDF API</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+
+        .top-header {
+            width: 100%;
+            background-color: #003366;
+            color: white;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .system-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .main-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 111px);
+            flex-direction: column;
+        }
+
+        .container {
+            display: flex;
+            background-color: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            max-width: 960px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 2rem;
+            flex-direction: column;
+        }
+
+        .form-section,
+        .braille-section {
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-section h2,
+        .braille-section h2 {
+            color: #003366;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input[type="file"],
+        input[type="number"],
+        select {
+            margin: 1rem 0;
+            padding: 1rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 400px;
+        }
+
+        .form-section button,
+        .braille-section button {
+            padding: 0.75rem;
+            background-color: #007b5e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            max-width: 200px;
+        }
+
+        .form-section button:hover,
+        .braille-section button:hover {
+            background-color: #005f47;
+        }
+
+        #brailleOutput {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .braille-cell {
+            display: grid;
+            grid-template-columns: repeat(2, 20px);
+            grid-template-rows: repeat(3, 20px);
+            gap: 5px;
+            width: fit-content;
+        }
+
+        .dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: lightgray;
+        }
+
+        .filled {
+            background-color: black;
+        }
+
+        #response,
+        #error {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        #response {
+            color: green;
+        }
+
+        #error {
+            color: red;
+        }
+
+        .footer {
+            text-align: center;
+            padding-bottom: 1rem;
+            padding-top: 1rem;
+            background-color: #003366;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .reload-btn {
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #e67e22;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .reload-btn:hover {
+            background-color: #d35400;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-header">
+        <div class="header-content">
+            <h1 class="system-title">BraillePDF API - Subir PDF</h1>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="container">
+            <!-- Formulario de Subida PDF -->
+            <div class="form-section">
+                <h2>Subir un archivo PDF</h2>
+                <div id="response"></div>
+                <div id="error"></div>
+                <form id="upload-form">
+                    <input type="file" name="pdf" accept=".pdf" required>
+                    <button type="submit">Subir PDF</button>
+                </form>
+            </div>
+
+            <!-- Selección y Lectura Braille -->
+            <div class="braille-section">
+                <h2>Lecturas Braille Disponibles</h2>
+                <label for="fileSelect">Selecciona un archivo:</label>
+                <select id="fileSelect"></select>
+
+                <br>
+
+                <label for="chunkInput">Cantidad de caracteres a leer (chunk_size):</label>
+                <input type="number" id="chunkInput" min="1" value="3">
+
+                <button onclick="leerBraille()">Leer</button>
+                <br>
+
+                <div id="brailleOutput"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        © 2025 BraillePDF API - Todos los derechos reservados.
+    </footer>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            alert('No autorizado');
+            window.location.href = '/';
+        }
+
+        // Cargar archivos al cargar la página
+        window.onload = async () => {
+            await loadFiles();
+        };
+
+        async function loadFiles() {
+            const response = await fetch('/api/braille/files', {
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+
+            const data = await response.json();
+            const archivos = data.files;
+            const select = document.getElementById('fileSelect');
+
+            select.innerHTML = ''; // Limpiar opciones antes de agregar nuevas
+
+            archivos.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file;
+                option.textContent = file;
+                select.appendChild(option);
+            });
+        }
+
+        // Función para leer Braille
+        async function leerBraille() {
+            const title = document.getElementById('fileSelect').value;
+            const chunk_size = parseInt(document.getElementById('chunkInput').value);
+
+            const res = await fetch('/api/braille/read', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ title, chunk_size })
+            });
+
+            const data = await res.json();
+            const container = document.getElementById('brailleOutput');
+            container.innerHTML = '';
+
+            data.chunk.forEach(bits => {
+                const cell = document.createElement('div');
+                cell.className = 'braille-cell';
+
+                for (let i = 0; i < 6; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'dot';
+                    if (bits[i] === '1') dot.classList.add('filled');
+                    cell.appendChild(dot);
+                }
+
+                container.appendChild(cell);
+            });
+        }
+
+        // Recargar la lista de archivos
+        function reloadFiles() {
+            loadFiles();
+        }
+
+        // Formulario de subida de PDF
+        document.getElementById('upload-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData();
+
+            // El archivo se toma correctamente con el nombre 'file'
+            formData.append('file', form.pdf.files[0]);
+
+            const res = await fetch('/api/pdf/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                const response = await res.json();
+                document.getElementById('response').innerText = "Archivo subido con éxito.";
+                document.getElementById('error').innerText = '';
+
+                loadFiles();
+
+            } else {
+                const errorMessage = await res.text();
+                document.getElementById('response').innerText = '';
+                document.getElementById('error').innerText = errorMessage;
+            }
+        });
+    </script>
+</body>
+
+</html>

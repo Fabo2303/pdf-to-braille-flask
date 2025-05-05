@@ -7,12 +7,14 @@ def register_user():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    role = 'estudiante'
 
     if User.query.filter_by(username=username).first():
         return jsonify({'error': 'Username already exists'}), 400
 
     user = User(username=username)
     user.set_password(password)
+    user.set_role(role)
     db.session.add(user)
     db.session.commit()
 
@@ -25,7 +27,7 @@ def login_user():
 
     user = User.query.filter_by(username=username).first()
     if user and user.check_password(password):
-        access_token = create_access_token(identity=str(user.id))
+        access_token = create_access_token(identity=str(user.id), additional_claims={'role': user.role})
         return jsonify({'access_token': access_token}), 200
 
     return jsonify({'error': 'Invalid credentials'}), 401

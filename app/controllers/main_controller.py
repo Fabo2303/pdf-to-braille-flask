@@ -4,7 +4,7 @@ def index():
     return render_template('index.html')
 
 def brailletest():
-    return render_template('brailletest.html')
+    return render_template('view.html')
 
 def public():
     return 'public access'
