@@ -13,6 +13,7 @@ with app.app_context():
     if not User.query.filter_by(username='admin').first():
         user = User(username='admin')
         user.set_password('123456')
+        user.set_role('profesor')
         db.session.add(user)
         db.session.commit()
 
