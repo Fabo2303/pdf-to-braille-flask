@@ -1,106 +1,282 @@
-<!DOCTYPE html> 
-<html lang="es"> 
-<head> 
-    <meta charset="UTF-8"> 
-    <title>Login / Registro</title> 
-    <style> 
-        body { font-family: Arial, sans-serif; padding: 2rem; } 
-        form { max-width: 400px; margin-bottom: 2rem; } 
-        input, button { display: block; width: 100%; margin: 0.5rem 0; padding: 0.5rem; } 
-        .switch-link { cursor: pointer; color: blue; text-decoration: underline; } 
-        #response { margin-top: 1rem; color: green; } 
-        #error { color: red; } 
-    </style> 
-</head> 
-<body> 
- 
-<h2 id="form-title">Iniciar sesión</h2> 
- 
-<div id="response"></div> 
-<div id="error"></div> 
- 
-<!-- Formulario de Login --> 
-<form id="login-form"> 
-    <input type="text" name="username" placeholder="Usuario" required> 
-    <input type="password" name="password" placeholder="Contraseña" required> 
-    <button type="submit">Ingresar</button> 
-    <p>¿No tienes cuenta? <span class="switch-link" onclick="toggleForms()">Regístrate 
-aquí</span></p> 
-</form> 
- 
-<!-- Formulario de Registro --> 
-<form id="register-form" style="display: none;"> 
-    <input type="text" name="username" placeholder="Usuario" required> 
-    <input type="password" name="password" placeholder="Contraseña" required> 
-    <button type="submit">Registrarse</button> 
-    <p>¿Ya tienes cuenta? <span class="switch-link" onclick="toggleForms()">Inicia sesión 
-aquí</span></p> 
-</form> 
- 
-<script> 
-    function toggleForms() { 
-        const loginForm = document.getElementById('login-form'); 
-        const registerForm = document.getElementById('register-form'); 
-        const title = document.getElementById('form-title'); 
-        const response = document.getElementById('response'); 
-        const error = document.getElementById('error'); 
-        response.innerText = ''; 
-        error.innerText = ''; 
- 
-        const isLoginVisible = loginForm.style.display !== "none"; 
-        loginForm.style.display = isLoginVisible ? "none" : "block"; 
-        registerForm.style.display = isLoginVisible ? "block" : "none"; 
-        title.textContent = isLoginVisible ? "Registro" : "Iniciar sesión"; 
-    } 
- 
-    // Login 
-    document.getElementById('login-form').addEventListener('submit', async function(e) { 
-        e.preventDefault(); 
-        const form = e.target; 
-        const data = { 
-            username: form.username.value, 
-            password: form.password.value 
-        }; 
- 
-        const res = await fetch('/api/auth/login', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(data) 
-        }); 
+<!DOCTYPE html>
+<html lang="es">
 
-        if (res.ok){
-            const response = await res.json();
-            const token = response.access_token;
-
-            localStorage.setItem('token', token);
-
-            window.location.href = '/brailletest';
-        } else{
-            const responseText = await res.text();
-            document.getElementById('error').innerText = res.ok ? '' : responseText; 
+<head>
+    <meta charset="UTF-8" />
+    <title>BraillePDF API - Acceso</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            display: block;
         }
-    }); 
- 
-    // Registro 
-    document.getElementById('register-form').addEventListener('submit', async function(e) { 
-        e.preventDefault(); 
-        const form = e.target; 
-        const data = { 
-            username: form.username.value, 
-            password: form.password.value 
-        }; 
- 
-        const res = await fetch('/api/auth/register', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify(data) 
-        }); 
- 
-        const responseText = await res.text(); 
-        document.getElementById('response').innerText = res.ok ? responseText : ''; 
-        document.getElementById('error').innerText = res.ok ? '' : responseText; 
-    }); 
-</script> 
- 
-</body> 
+
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 111px);
+            /* espacio debajo del header */
+        }
+
+        .top-header {
+            width: 100%;
+            background-color: #003366;
+            color: white;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .system-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            background-color: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            max-width: 960px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .info-section {
+            background-color: #003366;
+            color: white;
+            padding: 2rem;
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .info-section img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-section h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-section p {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .form-section {
+            padding: 2rem;
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        h2 {
+            text-align: center;
+            color: #003366;
+            margin-bottom: 1rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input {
+            margin: 0.5rem 0;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        button {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: #007b5e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #005f47;
+        }
+
+        .footer {
+            text-align: center;
+            padding-bottom: 1rem;
+            padding-top: 1rem;
+            background-color: #003366;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .switch-link {
+            margin-top: 1rem;
+            text-align: center;
+            color: #005580;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        #response,
+        #error {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        #response {
+            color: green;
+        }
+
+        #error {
+            color: red;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .info-section,
+            .form-section {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="top-header">
+        <div class="header-content">
+            <h1 class="system-title">BraillePDF API</h1>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <!-- Descripción / Imagen -->
+            <div class="info-section">
+                <img src="https://www.redaccion.com.ar/wp-content/uploads/2024/01/pexels-eren-li-7188938.jpg"
+                    alt="BraillePDF imagen representativa">
+                <h1>BraillePDF API</h1>
+                <p>
+                    Esta plataforma permite a maestros convertir archivos PDF a texto Braille,
+                    mediante procesamiento OCR y traducción automatizada. El resultado se puede enviar a un dispositivo
+                    externo como el ESP32.
+                    Administra usuarios, protege los accesos y traduce con facilidad.
+                </p>
+            </div>
+
+            <!-- Login / Registro -->
+            <div class="form-section">
+                <h2 id="form-title">Iniciar sesión</h2>
+                <div id="response"></div>
+                <div id="error"></div>
+
+                <!-- Formulario Login -->
+                <form id="login-form">
+                    <input type="text" name="username" placeholder="Usuario" required>
+                    <input type="password" name="password" placeholder="Contraseña" required>
+                    <button type="submit">Ingresar</button>
+                    <p class="switch-link" onclick="toggleForms()">¿No tienes cuenta? Regístrate aquí</p>
+                </form>
+
+                <!-- Formulario Registro -->
+                <form id="register-form" style="display: none;">
+                    <input type="text" name="username" placeholder="Usuario" required>
+                    <input type="password" name="password" placeholder="Contraseña" required>
+                    <button type="submit">Registrarse</button>
+                    <p class="switch-link" onclick="toggleForms()">¿Ya tienes cuenta? Inicia sesión aquí</p>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        © 2025 BraillePDF API - Todos los derechos reservados.
+    </footer>
+
+    <script>
+        function toggleForms() {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const title = document.getElementById('form-title');
+            const response = document.getElementById('response');
+            const error = document.getElementById('error');
+            response.innerText = '';
+            error.innerText = '';
+
+            const isLoginVisible = loginForm.style.display !== "none";
+            loginForm.style.display = isLoginVisible ? "none" : "flex";
+            registerForm.style.display = isLoginVisible ? "flex" : "none";
+            title.textContent = isLoginVisible ? "Registro" : "Iniciar sesión";
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                username: form.username.value,
+                password: form.password.value
+            };
+
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                const response = await res.json();
+                localStorage.setItem('token', response.access_token);
+                window.location.href = '/view';
+            } else {
+                document.getElementById('error').innerText = await res.text();
+            }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                username: form.username.value,
+                password: form.password.value
+            };
+
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const responseText = await res.text();
+            document.getElementById('response').innerText = res.ok ? responseText : '';
+            document.getElementById('error').innerText = res.ok ? '' : responseText;
+        });
+    </script>
+
+</body>
+
 </html>

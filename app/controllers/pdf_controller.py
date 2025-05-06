@@ -16,8 +16,9 @@ def upload_pdf():
     filename = secure_filename(file.filename)
     filepath = os.path.join('uploads/pdf', filename)
     file.save(filepath)
+    filename_only = filename.split('.')[0]
 
-    text = extract_text_from_pdf(filepath)
-    braille = text_to_braille(' '.join(text))
+    text = extract_text_from_pdf(filepath, output_file=filename_only + '.txt')
+    braille = text_to_braille(' '.join(text), filename_only + '_braille.txt')
 
     return jsonify({'original_text': text, 'braille': braille})

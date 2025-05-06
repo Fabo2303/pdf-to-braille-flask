@@ -31,7 +31,7 @@ braille_map = {
     'número': '010111',     # Prefijo para números
 }
 
-def text_to_braille(text : str) -> str:
+def text_to_braille(text : str, filename: str = 'braille_output.txt') -> str:
     """
     Convierte texto a Braille utilizando el diccionario braille_map.
     :param text: Texto a convertir.
@@ -46,5 +46,5 @@ def text_to_braille(text : str) -> str:
             braille_text += '000000 '  # Si no se encuentra en el diccionario, poner un espacio
     
     braille_text = braille_text.strip()
-    save_braille_to_file(braille_text, 'braille_output.txt')
+    save_braille_to_file(braille_text, filename)
     return braille_text
